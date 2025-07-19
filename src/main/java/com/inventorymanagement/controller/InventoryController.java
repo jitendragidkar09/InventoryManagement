@@ -16,12 +16,14 @@ public class InventoryController {
     @Autowired
     private InventoryService inventoryService;
 
+    // Create Inventory
     @PostMapping
     public ResponseEntity<Inventory> postInventory(@RequestBody Inventory inventory) {
         Inventory saved = inventoryService.createInventory(inventory);
         return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 
+    // Get All Inventories
     @GetMapping
     public ResponseEntity<List<Inventory>> getAllInventory() {
         List<Inventory> list = inventoryService.getAllInventories();
@@ -30,25 +32,24 @@ public class InventoryController {
                 : new ResponseEntity<>(list, HttpStatus.OK);
     }
 
+    // Get Inventory by ID
     @GetMapping("/{id}")
     public ResponseEntity<Inventory> getInventoryById(@PathVariable Integer id) {
-        return inventoryService.getInventoryById(id)
-                .map(inventory -> new ResponseEntity<>(inventory, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        Inventory inventory = inventoryService.getInventoryById(id);
+        return new ResponseEntity<>(inventory, HttpStatus.OK);
     }
 
+    // Update Inventory
     @PutMapping
     public ResponseEntity<Inventory> updateInventory(@RequestBody Inventory inventory) {
-        return inventoryService.updateInventory(inventory)
-                .map(updated -> new ResponseEntity<>(updated, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        Inventory updated = inventoryService.updateInventory(inventory);
+        return new ResponseEntity<>(updated, HttpStatus.OK);
     }
 
+    // Delete Inventory by ID
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteInventory(@PathVariable Integer id) {
-        boolean deleted = inventoryService.deleteInventory(id);
-        return deleted
-                ? new ResponseEntity<>(HttpStatus.NO_CONTENT)
-                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        inventoryService.deleteInventory(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

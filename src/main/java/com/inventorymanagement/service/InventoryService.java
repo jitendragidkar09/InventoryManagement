@@ -1,6 +1,7 @@
 package com.inventorymanagement.service;
 
 import com.inventorymanagement.entity.Inventory;
+import com.inventorymanagement.exception.InventoryNotFoundException;
 import com.inventorymanagement.repository.InventoryRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,24 +24,26 @@ public class InventoryService {
         return inventoryRepository.save(inventory);
     }
 
-    public Optional<Inventory> updateInventory(Inventory inventory) {
-        return inventoryRepository.findById(inventory.getId()).map(existing -> {
-            existing.setName(inventory.getName());
-            existing.setPrice(inventory.getPrice());
-            existing.setQuantity(inventory.getQuantity());
-            return inventoryRepository.save(existing);
-        });
+    public Inventory updateInventory(Inventory inventory) {
+        Inventory existing = inventoryRepository.findById(inventory.getId())
+                .orElseThrow(() -> new InventoryNotFoundException("Inventory with ID " + inventory.getId() + " not found"));
+
+        existing.setName(inventory.getName());
+        existing.setQuantity(inventory.getQuantity());
+        existing.setPrice(inventory.getPrice());
+
+        return inventoryRepository.save(existing);
     }
 
-    public boolean deleteInventory(Integer id) {
-        if (inventoryRepository.existsById(id)) {
-            inventoryRepository.deleteById(id);
-            return true;
+    public void deleteInventory(Integer id) {
+        if (!inventoryRepository.existsById(id)) {
+            throw new InventoryNotFoundException("Inventory with ID " + id + " not found");
         }
-        return false;
+        inventoryRepository.deleteById(id);
     }
 
-    public Optional<Inventory> getInventoryById(Integer id) {
-        return inventoryRepository.findById(id);
+    public Inventory getInventoryById(Integer id) {
+        return inventoryRepository.findById(id)
+                .orElseThrow(() -> new InventoryNotFoundException("Inventory with ID " + id + " not found"));
     }
 }
