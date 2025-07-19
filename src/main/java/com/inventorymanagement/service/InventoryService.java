@@ -3,41 +3,44 @@ package com.inventorymanagement.service;
 import com.inventorymanagement.entity.Inventory;
 import com.inventorymanagement.repository.InventoryRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class InventoryService {
-    private final InventoryRepository inventoryRepository;
+    @Autowired
+    private InventoryRepository inventoryRepository;
 
-    public InventoryService(InventoryRepository inventoryRepository) {
-        this.inventoryRepository = inventoryRepository;
+    public List<Inventory> getAllInventories() {
+        return inventoryRepository.findAll().stream().toList();
     }
 
-    //To get all the inventories
-    public List<Inventory> getAllInventories(){
-        List<Inventory> inventoryList = inventoryRepository.findAll();
-        return inventoryList;
-    }
-
-    //To create new inventory
     @Transactional
-    public Inventory createInventory(Inventory inventory){
+    public Inventory createInventory(Inventory inventory) {
         return inventoryRepository.save(inventory);
     }
 
-    //To update an inventory
-    public Inventory updateInventory(Inventory inventory){
-        Inventory oldInventory = inventoryRepository.findById(inventory.getId()).get();
-        oldInventory.setName(inventory.getName());
-        oldInventory.setPrice(inventory.getPrice());
-        oldInventory.setQuantity(inventory.getQuantity());
-        return oldInventory;
+    public Optional<Inventory> updateInventory(Inventory inventory) {
+        return inventoryRepository.findById(inventory.getId()).map(existing -> {
+            existing.setName(inventory.getName());
+            existing.setPrice(inventory.getPrice());
+            existing.setQuantity(inventory.getQuantity());
+            return inventoryRepository.save(existing);
+        });
     }
 
-    //To delete an inventory
-    public void deleteInventory(Integer id){
-        inventoryRepository.deleteById(id);
+    public boolean deleteInventory(Integer id) {
+        if (inventoryRepository.existsById(id)) {
+            inventoryRepository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
+
+    public Optional<Inventory> getInventoryById(Integer id) {
+        return inventoryRepository.findById(id);
     }
 }

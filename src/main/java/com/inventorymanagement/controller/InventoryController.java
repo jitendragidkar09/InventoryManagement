@@ -2,6 +2,7 @@ package com.inventorymanagement.controller;
 
 import com.inventorymanagement.entity.Inventory;
 import com.inventorymanagement.service.InventoryService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,32 +10,45 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequestMapping("/inventory")
 public class InventoryController {
 
-    private final InventoryService inventoryService;
+    @Autowired
+    private InventoryService inventoryService;
 
-    public InventoryController(InventoryService inventoryService) {
-        this.inventoryService = inventoryService;
+    @PostMapping
+    public ResponseEntity<Inventory> postInventory(@RequestBody Inventory inventory) {
+        Inventory saved = inventoryService.createInventory(inventory);
+        return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 
-    @PostMapping("/inventory")
-    public Inventory postInventory(@RequestBody Inventory inventory){
-        return inventoryService.createInventory(inventory);
+    @GetMapping
+    public ResponseEntity<List<Inventory>> getAllInventory() {
+        List<Inventory> list = inventoryService.getAllInventories();
+        return list.isEmpty()
+                ? new ResponseEntity<>(HttpStatus.NO_CONTENT)
+                : new ResponseEntity<>(list, HttpStatus.OK);
     }
 
-    @GetMapping("/inventory")
-    public List<Inventory> getAllInventory(){
-        return inventoryService.getAllInventories();
+    @GetMapping("/{id}")
+    public ResponseEntity<Inventory> getInventoryById(@PathVariable Integer id) {
+        return inventoryService.getInventoryById(id)
+                .map(inventory -> new ResponseEntity<>(inventory, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @PutMapping("/inventory")
-    public Inventory updateInventory(@RequestBody Inventory inventory){
-        return inventoryService.updateInventory(inventory);
+    @PutMapping
+    public ResponseEntity<Inventory> updateInventory(@RequestBody Inventory inventory) {
+        return inventoryService.updateInventory(inventory)
+                .map(updated -> new ResponseEntity<>(updated, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @DeleteMapping("/inventory/{id}")
-    public ResponseEntity<?> deleteInventory(@PathVariable("id") Integer id){
-        inventoryService.deleteInventory(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteInventory(@PathVariable Integer id) {
+        boolean deleted = inventoryService.deleteInventory(id);
+        return deleted
+                ? new ResponseEntity<>(HttpStatus.NO_CONTENT)
+                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 }
